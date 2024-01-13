@@ -1,0 +1,193 @@
+import java.util.*;
+
+public class Lab6 {
+
+    public static void main(String[] args) throws InterruptedException {
+        Scanner input = new Scanner(System.in);
+        System.out.print("Enter the size of Array : ");
+        int n = input.nextInt();
+        int[] coinsArr = new int[n];
+
+        System.out.println("Enter the sum value : ");
+        int sum = input.nextInt();
+        Thread t1 = new Thread(() -> {
+
+            synchronized (coinsArr) {
+
+                System.out.print("Enter the coins value: ");
+                for (int i = 0; i < n; i++) {
+                    coinsArr[i] = input.nextInt();
+                }
+
+            }
+        });
+        List<List<Integer>> v = new ArrayList<>();
+        Thread t2 = new Thread(() -> {
+            synchronized (coinsArr) {
+                combiFunction(coinsArr, sum, 0, new ArrayList<>(), v);
+            }
+        });
+
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+        for (List<Integer> combination : v) {
+            System.out.println(combination);
+        }
+
+    }
+
+    static void combiFunction(int[] array, int target, int start, List<Integer> current,
+            List<List<Integer>> result) {
+        if (target == 0) {
+
+            result.add(new ArrayList<>(current));
+            return;
+        }
+
+        for (int i = start; i < array.length; i++) {
+
+            if (array[i] <= target) {
+                current.add(array[i]);
+                combiFunction(array, target - array[i], i, current, result);
+                current.remove(current.size() - 1);
+            }
+        }
+    }
+
+}
+
+//part 2
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
+class Item {
+    public int itemId;
+    public String itemName;
+
+    public Item(int itemId, String itemName) {
+        this.itemId = itemId;
+        this.itemName = itemName;
+    }
+
+    public int getItemId() {
+        return itemId;
+    }
+
+    public String getItemName() {
+        return itemName;
+    }
+}
+
+class Order {
+    private int orderId;
+    private List<Item> items;
+
+    public Order(int orderId, List<Item> items) {
+        this.orderId = orderId;
+        this.items = items;
+    }
+
+    public int getOrderId() {
+        return orderId;
+    }
+
+    public List<Item> getItems() {
+        return items;
+    }
+}
+
+class OrderFulfillmentSystem {
+    private List<Order> orders;
+    private List<Item> inventory;
+
+    public OrderFulfillmentSystem() {
+        this.orders = new ArrayList<>();
+        this.inventory = new ArrayList<>();
+    }
+
+    public void placeOrder(Order order) {
+        orders.add(order);
+    }
+
+    public void updateInventory(Order order) {
+        for (Item item : order.getItems()) {
+            inventory.add(item);
+        }
+    }
+
+    public boolean checkInventoryAvailability(Item item) {
+        return inventory.contains(item);
+    }
+
+    public void trackOrderStatus(int orderId) {
+        for (Order order : orders) {
+            if (order.getOrderId() == orderId) {
+                System.out.println("Order " + orderId + " is in progress.");
+                return;
+            }
+        }
+        System.out.println("Order " + orderId + " not found.");
+    }
+
+    public void startProcessing() {
+        for (Order order : orders) {
+            processOrder(order);
+        }
+    }
+
+    private void processOrder(Order order) {
+        System.out.println("Processing order " + order.getOrderId());
+        updateInventory(order);
+        System.out.println("Order " + order.getOrderId() + " is successful");
+    }
+}
+
+public class OrderFulfillmentTest {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        OrderFulfillmentSystem orderFulfillmentSystem = new OrderFulfillmentSystem();
+
+        System.out.println("Enter the number of orders: ");
+        int numOrders = scanner.nextInt();
+        scanner.nextLine();
+
+        for (int i = 1; i <= numOrders; i++) {
+            List<Item> items = new ArrayList<>();
+            System.out.println("Enter the number of items : ");
+            int numItems = scanner.nextInt();
+            scanner.nextLine();
+
+            for (int j = 1; j <= numItems; j++) {
+                System.out.print("Enter item ID : ");
+                int itemId = scanner.nextInt();
+
+                scanner.nextLine();
+
+                System.out.print("Enter item name : ");
+                String itemName = scanner.nextLine();
+
+                Item item = new Item(itemId, itemName);
+                items.add(item);
+            }
+            Order order = new Order(i, items);
+            orderFulfillmentSystem.placeOrder(order);
+        }
+
+        orderFulfillmentSystem.startProcessing();
+        System.out.println("Enter item ID to check  availability: ");
+        int itemIdToCheck = scanner.nextInt();
+        scanner.nextLine();
+        System.out.print("Enter item name : ");
+        String itemNameToCheck = scanner.nextLine();
+        Item itemToCheck = new Item(itemIdToCheck, itemNameToCheck);
+        System.out.println("Stock for item " + itemIdToCheck + ": " +
+        orderFulfillmentSystem.checkInventoryAvailability(itemToCheck));
+        System.out.println("Enter order ID to track status: ");
+        int orderIdToTrack = scanner.nextInt();
+        orderFulfillmentSystem.trackOrderStatus(orderIdToTrack);
+    }
+}
